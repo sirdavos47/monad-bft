@@ -1,10 +1,13 @@
 # Builder image used in Rust build pipelines
 FROM ubuntu:25.04 AS base
 
+FROM ubuntu:25.04 AS base
+
 RUN apt update && apt install -y \
   binutils \
   iproute2 \
   clang \
+  clang-19 \
   curl \
   make \
   ca-certificates \
@@ -21,9 +24,7 @@ RUN apt update && apt install -y \
   libcrypto++-dev \
   libhugetlbfs0 \
   libhugetlbfs-bin \
-  libhugetlbfs-dev
-
-RUN apt update && apt install -y \
+  libhugetlbfs-dev \
   libboost1.83-dev \
   libboost-atomic1.83.0 \
   libboost-container1.83.0 \
@@ -36,9 +37,7 @@ RUN apt update && apt install -y \
   libboost-json1.83-dev \
   libboost-regex1.83.0 \
   libboost-stacktrace1.83.0 \
-  libboost-stacktrace1.83-dev
-
-RUN apt update && apt install -y \
+  libboost-stacktrace1.83-dev \
   libcgroup-dev \
   libabsl-dev \
   libarchive-dev \
@@ -52,25 +51,22 @@ RUN apt update && apt install -y \
   libmimalloc-dev \
   libtbb-dev \
   liburing-dev \
-  libzstd-dev
-
-RUN apt update && apt install -y \
+  libzstd-dev \
   cmake \
-  clang-19 \
   libssl-dev \
   gdb \
-  python-is-python3 \
   valgrind \
   ninja-build \
-  python3-pytest
+  python3-pytest \
+  && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-
-
+## Add ubuntu user if not exists
+RUN useradd -ms /bin/bash ubuntu || true
 USER ubuntu
 
 WORKDIR /usr/src/monad-bft
 
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | bash -s -- -y
 ENV PATH="/home/ubuntu/.cargo/bin:${PATH}"
-RUN rustup toolchain install 1.87.0-x86_64-unknown-linux-gnu
+RUN /bin/bash -c "source /home/ubuntu/.cargo/env && rustup toolchain install 1.87.0-x86_64-unknown-linux-gnu"
 ARG TRIEDB_TARGET=triedb_driver
